@@ -1,5 +1,6 @@
 // Home page
 "use client"
+import "./globals.css";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";

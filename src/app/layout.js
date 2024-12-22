@@ -3,7 +3,7 @@
 import "@radix-ui/themes/styles.css";
 import "./globals.css";
 import Providers from "./components/Providers";
-import { Theme, Flex, Heading } from "@radix-ui/themes";
+import { Theme } from "@radix-ui/themes";
 
 export default function RootLayout({ children }) {
 

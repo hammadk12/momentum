@@ -1,4 +1,9 @@
 
+@import "@radix-ui/themes/styles.css";
+
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: 'GT-Walsheim';
   src: url('/fonts/GT-Walsheim-Bold') format('woff');
@@ -6,6 +11,6 @@
   font-style: normal;
 }
 
-body {
+* {
   font-family: 'GT-Walsheim', sans-serif;
 }
