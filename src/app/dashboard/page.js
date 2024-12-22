@@ -1,6 +1,6 @@
 "use client"
-import { Heading } from "@radix-ui/themes";
-import { useSession } from "next-auth/react";
+import { Button } from "@radix-ui/themes";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Dashboard() {
     const { data: session } = useSession();
@@ -16,6 +16,13 @@ export default function Dashboard() {
     return (
       <div>
         <h1>Welcome to your dashboard, {session.user.name}!</h1>
+        <Button 
+        onClick={() => signOut({ callbackUrl: '/' })} 
+        style={{
+          cursor: 'pointer'
+        }}>
+          Sign Out
+        </Button>
         {/* Additional dashboard content */}
       </div>
     );
