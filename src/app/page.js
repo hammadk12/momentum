@@ -18,17 +18,20 @@ export default function Home() {
     }
   }, [status, router]);
 
-  return (
-    <div>
-      <h1>Welcome to Momentum!</h1>
-      {status === "loading" ? (
-        <p>Loading...</p>
-      ) : !session ? (
-        <div>
-          <p>Please sign in to continue.</p>
-          <SigninButton />
-        </div>
-      ) : null}
-    </div>
-  );
+ // If the session status is still loading, show the loading message
+ if (status === "loading") {
+  return <p>Loading...</p>;
+}
+
+return (
+  <div>
+    <h1>Welcome to Momentum!</h1>
+    {!session ? (
+      <div>
+        <p>Please sign in to continue.</p>
+        <SigninButton />
+      </div>
+    ) : null}
+  </div>
+);
 }

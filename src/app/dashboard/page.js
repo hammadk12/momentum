@@ -1,17 +1,37 @@
 "use client"
-import { Button, Container, Box, Grid, Section, Flex, Heading, Theme, Text, Card } from "@radix-ui/themes";
+import { Button, Theme, Card } from "@radix-ui/themes";
 import { useSession, signOut } from "next-auth/react";
+import { useState, useEffect } from "react";
 
 export default function Dashboard() {
-    const { data: session } = useSession();
-  
-    if (!session) {
-      return (
-        <div>
-          <h1>You need to sign in to view your dashboard.</h1>
-        </div>
-      );
+    const { data: session, status } = useSession();
+    const [sleepData, setSleepData] = useState([])
+
+    useEffect(() => {
+      if (session) {
+        const fetchSleepData = async () => {
+          const res = await fetch("/api/sleepData")
+          const data = await res.json()
+
+          if (res.ok) {
+            setSleepData(data)
+          } else {
+            console.error("Error fetching sleep data:", data.message)
+          }
+        }
+
+        fetchSleepData();
+      }
+    }, [session])
+
+    if (status === "loading") {
+      return <div>Loading...</div>
     }
+
+    if (!session) {
+      return <div>You need to sign in to view your dashboard.</div>;  // Show a message if no session is found
+    }
+
   
     return (
       <div className="flex flex-col justify-center m-20">
@@ -20,6 +40,13 @@ export default function Dashboard() {
         <div>
           <Card>
             Sleep
+            <ul>
+            {sleepData.map((data) => (
+            <li key={data._id}>
+              Date: {new Date(data.date).toLocaleDateString()} - Hours Slept: {data.hoursSlept}
+            </li>
+          ))}
+            </ul>
           </Card>
           <Card>
             Food

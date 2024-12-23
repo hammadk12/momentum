@@ -28,3 +28,28 @@ export async function POST(req) {
       );
     }
   }
+    // GET handler for fetching sleep data
+    export async function GET() {
+      try {
+        // Ensure DB is connected before querying
+        await dbConnect();
+    
+        // Fetch sleep data from MongoDB
+        const sleepData = await SleepData.find();  // No limit for now
+    
+        if (!sleepData || sleepData.length === 0) {
+          // If no data found
+          console.log("No sleep data found");
+          return new Response(JSON.stringify({ message: "No sleep data found" }), { status: 404 });
+        }
+    
+        // Return the fetched sleep data
+        return new Response(JSON.stringify(sleepData), { status: 200 });
+      } catch (error) {
+        console.error("Error fetching sleep data:", error); // Enhanced error logging
+        return new Response(
+          JSON.stringify({ message: "Error fetching sleep data", error: error.message }),
+          { status: 500 }
+        );
+      }
+    }
