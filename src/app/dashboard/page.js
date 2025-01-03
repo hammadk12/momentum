@@ -10,6 +10,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (session) {
+      console.log(session)
       const fetchSleepData = async () => {
         const res = await fetch("/api/sleepData")
         const data = await res.json()
@@ -32,6 +33,8 @@ export default function Dashboard() {
   if (!session) {
     return <div>You need to sign in to view your dashboard.</div>;  // Show a message if no session is found
   }
+
+  const userId = session.user.id
 
 
   return (
@@ -58,7 +61,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Workout Card */}
-          <WorkoutCard />
+          <WorkoutCard userId={userId}/>
           
           </div>
           </Theme>

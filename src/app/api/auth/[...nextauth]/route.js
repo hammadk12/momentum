@@ -49,6 +49,7 @@ const handler = NextAuth({
 
             const existingUser = await usersCollection.findOne({ email: session.user.email })
             if (existingUser) {
+                session.user.id = existingUser._id.toString();
                 session.user.firstTimeLogin = existingUser.firstTimeLogin || false
             }
             client.close()
