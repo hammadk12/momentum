@@ -15,9 +15,9 @@ const WorkoutSchema = new mongoose.Schema({
   name: { type: String, required: true }, // Workout name (e.g., "Chest & Back")
   date: { type: Date, required: true }, // Date of the workout
   exercises: [ExerciseSchema], // Array of exercises
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-});
+},
+{ timestamps: true }
+);
 
 const WorkoutData = mongoose.models.WorkoutData || mongoose.model("WorkoutData", WorkoutSchema);
 

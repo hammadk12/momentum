@@ -36,28 +36,38 @@ export async function POST(req) {
       }
     }
     
-    // GET handler for fetching workout data
-    export async function GET() {
-      try {
-        await dbConnect(); // Ensure DB is connected
-    
-        // Fetch workout data from MongoDB
-        const workoutData = await WorkoutData.find();
-    
-        if (!workoutData || workoutData.length === 0) {
-          // If no data found
-          return new Response(JSON.stringify({ message: "No workout data found" }), {
-            status: 404,
-          });
-        }
-    
-        // Return the fetched workout data
-        return new Response(JSON.stringify(workoutData), { status: 200 });
-      } catch (error) {
-        console.error("Error fetching workout data:", error);
-        return new Response(
-          JSON.stringify({ message: "Error fetching workout data", error }),
-          { status: 500 }
-        );
+    // GET handler for fetching workout data for the week
+export async function GET(req) {
+    await dbConnect(); // Ensure DB is connected
+  
+    try {
+      const today = new Date();
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay()); // Set to start of the week (Sunday)
+      startOfWeek.setHours(0, 0, 0, 0); // Start at midnight
+  
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 7); // Set to the end of the week (next Sunday)
+      endOfWeek.setHours(23, 59, 59, 999); // End at 11:59:59 PM
+  
+      // Fetch workouts for the week from the database
+      const workoutsForWeek = await WorkoutData.find({
+        date: { $gte: startOfWeek, $lt: endOfWeek }, // Filter by the date range
+      });
+  
+      if (!workoutsForWeek || workoutsForWeek.length === 0) {
+        return new Response(JSON.stringify({ message: "No workouts logged this week" }), {
+          status: 404,
+        });
       }
-}
+  
+      // Return the workouts for the week
+      return new Response(JSON.stringify(workoutsForWeek), { status: 200 });
+    } catch (error) {
+      console.error("Error fetching workout data:", error);
+      return new Response(
+        JSON.stringify({ message: "Error fetching workout data", error }),
+        { status: 500 }
+      );
+    }
+  }

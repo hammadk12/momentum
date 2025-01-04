@@ -2,11 +2,14 @@
 import { Button, Theme, Card, Dialog, Flex, TextField, Text, DropdownMenu } from "@radix-ui/themes";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import WorkoutCard from "../components/WorkoutCard";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const [sleepData, setSleepData] = useState([])
+
+  const router = useRouter(); // Use useRouter here to manage routing
 
   useEffect(() => {
     if (session) {
@@ -61,7 +64,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Workout Card */}
-          <WorkoutCard userId={userId}/>
+          <WorkoutCard router={router}/>
           
           </div>
           </Theme>
