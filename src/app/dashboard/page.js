@@ -4,79 +4,103 @@ import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import WorkoutCard from "../components/WorkoutCard";
+import ProgressCard from "../components/ProgressCard";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
-  const [sleepData, setSleepData] = useState([])
-
+  const [streak, setStreak] = useState(null);
+  const [totalWorkouts, setTotalWorkouts] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter(); // Use useRouter here to manage routing
-
+  
   useEffect(() => {
-    if (session) {
-      console.log(session)
-      const fetchSleepData = async () => {
-        const res = await fetch("/api/sleepData")
-        const data = await res.json()
-
-        if (res.ok) {
-          setSleepData(data)
-        } else {
-          console.error("Error fetching sleep data:", data.message)
-        }
-      }
-
-      fetchSleepData();
+    if (status === "loading") {
+      return; // Prevent fetch if session is still loading
     }
-  }, [session])
 
-  if (status === "loading") {
-    return <div>Loading...</div>
+    const fetchWorkoutStats = async () => {
+      try {
+        // Fetch the workout data for the logged-in user
+        const response = await fetch("/api/workoutData"); // Modify this URL as needed
+        const data = await response.json();
+
+        if (response.ok) {
+          // Sort the data by date
+          const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          // Calculate total workouts
+          setTotalWorkouts(sortedData.length);
+
+          // Calculate streak (consecutive workout days)
+          let currentStreak = 1;
+          let previousDate = new Date(sortedData[0].date);
+          sortedData.forEach((workout, index) => {
+            const currentDate = new Date(workout.date);
+            const dayDifference = (currentDate - previousDate) / (1000 * 3600 * 24);
+            if (dayDifference === 1) {
+              currentStreak++;
+            } else if (dayDifference > 1) {
+              currentStreak = 1; // Reset streak on gap
+            }
+            previousDate = currentDate;
+          });
+
+          // Set the streak state
+          setStreak(currentStreak);
+
+        } else {
+          setError(data.message || "Something went wrong");
+        }
+      } catch (error) {
+        setError("Error fetching data from server");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkoutStats();
+  }, [status]); // Re-run the effect when session status changes
+
+  if (status === "loading" || loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
   }
 
   if (!session) {
-    return <div>You need to sign in to view your dashboard.</div>;  // Show a message if no session is found
+    return <div>You need to sign in to view your dashboard.</div>;
   }
+
 
   const userId = session.user.id
 
-
   return (
-    <div className="m-20">
-      <p className="text-left text-2xl font-bold text-wrap">Welcome to your dashboard, {session.user.name}!</p>
-      <Theme>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+    <div className="flex justify-center min-h-screen text-white">
+      <div className="max-w-screen-sm w-full"> {/* Wrapper for mobile-first approach */}
+      <p className=" text-white text-xl font-bold text-center py-4 w-full">
+      Welcome, {session.user.name}!
+    </p>
+        {/* Progress Card */}
+        {streak !== null && totalWorkouts !== null ? (
+        <ProgressCard streak={streak} totalWorkouts={totalWorkouts} />
+      ) : (
+        <div className="text-center">Loading your progress...</div>
+      )}
 
-          <Card className="p-6 flex flex-col items-center text-center">
-            <h2 className="text-xl font-bold mb-4">Sleep</h2>
-            <p className="text-gray-500 mb-4">
-              Track your sleep hours and view your progress.
-            </p>
-            <Button className="mt-auto">Add Sleep Data</Button>
-          </Card>
-
-          {/* Food Card */}
-          <Card className="p-6 flex flex-col items-center text-center">
-            <h2 className="text-xl font-bold mb-4">Food</h2>
-            <p className="text-gray-500 mb-4">
-              Monitor your calorie intake and meals.
-            </p>
-            <Button className="mt-auto">Add Food Data</Button>
-          </Card>
-
-          {/* Workout Card */}
-          <WorkoutCard router={router}/>
-          
-          </div>
-          </Theme>
-
-
-
-          <Button
-            onClick={() => signOut({ callbackUrl: '/' })}
-            style={{ cursor: 'pointer', marginTop: '300px', width: '150px' }}>
-            Sign Out
-          </Button>
-
+        {/* Workout Card */}
+        <WorkoutCard router={router} />
+        
+        <Button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="m-6" // Center button, mobile-friendly width
+          style={{ cursor: 'pointer' }}
+        >
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 }

@@ -23,6 +23,7 @@ export default function WorkoutStats() {
     setsData: [],
 });
 
+
 // Handle input changes for current exercise
 const handleCurrentExerciseChange = (field, value) => {
   setCurrentExercise((prev) => {
@@ -136,6 +137,9 @@ const handleSaveWorkout = async () => {
       setExercises([]);
       setWorkoutName("");
       setWorkoutDate(new Date().toISOString().split("T")[0])
+
+      window.location.reload()
+
       alert("Workout saved successfully!");
     } catch (error) {
       console.error("Error saving workout:", error);
@@ -156,8 +160,12 @@ const handleSaveWorkout = async () => {
         const response = await fetch("/api/workoutData"); 
         const data = await response.json();
 
+        console.log("Fetched data:", data);
+
         if (response.ok) {
-          setWorkoutStats(data);
+          const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date))
+          setWorkoutStats(sortedData);
+          console.log("Sorted workouts: ", sortedData);
 
           // Calculate date range from workout dates
           if (data.length > 0) {
@@ -170,6 +178,7 @@ const handleSaveWorkout = async () => {
           } else {
             setDateRange("No workouts this week");
           }
+
         } else {
           setError(data.message || "Something went wrong");
         }
@@ -179,6 +188,8 @@ const handleSaveWorkout = async () => {
         setLoading(false);
       }
     };
+
+
 
     fetchWorkoutStats();
   }, []);
@@ -195,9 +206,11 @@ const handleSaveWorkout = async () => {
     return <div>Error: {error}</div>;
   }
 
+
   return (
     <div className="flex flex-col items-center px-4 py-8 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Your Workouts</h1>
+      <h1 className="text-4xl font-bold mb-6">Your Workouts</h1>
+
       <div className="w-full max-w-3xl space-y-4">
         {workoutStats && workoutStats.length > 0 ? (
           workoutStats.map((workout) => {
@@ -213,12 +226,13 @@ const handleSaveWorkout = async () => {
               className="bg-gray-800 p-4 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
             >
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold">
+                <h2 className="text-2xl font-bold">
                   Workout on {formattedDate}
                 </h2>
               </div>
 
-              <p className="font-medium">
+              <p className="font-semibold">{workout.name}</p>
+              <p className="font-medium text-gray-300">
                 Exercises:{" "}
                 {workout.exercises.map((exercise) => exercise.name || "Unnamed Exercise").join(", ")}
               </p>
