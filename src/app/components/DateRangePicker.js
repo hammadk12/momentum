@@ -1,9 +1,10 @@
 import { Button } from '@radix-ui/themes';
 import React from 'react'
 
-const DateRangePicker = ({ startDate, endDate, onStartDateChange, onEndDateChange, onSearch }) => {
+
+const DateRangePicker = ({ startDate, endDate, onStartDateChange, onEndDateChange, onSearch }) => { 
   return (
-    <div>
+    <div className='flex space-x-2 mb-10'>
       <input
         type="date"
         value={startDate}

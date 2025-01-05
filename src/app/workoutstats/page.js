@@ -20,7 +20,6 @@ export default function WorkoutStats() {
   const [exercises, setExercises] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [workouts, setWorkouts] = useState([]);
   const [currentExercise, setCurrentExercise] = useState({
     name: "",
     sets: 0,

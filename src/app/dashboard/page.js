@@ -33,15 +33,16 @@ export default function Dashboard() {
           setTotalWorkouts(sortedData.length);
 
           // Calculate streak (consecutive workout days)
-          let currentStreak = 1;
+          let currentStreak = 0;
           let previousDate = new Date(sortedData[0].date);
-          sortedData.forEach((workout, index) => {
+          sortedData.forEach((workout) => {
             const currentDate = new Date(workout.date);
             const dayDifference = (currentDate - previousDate) / (1000 * 3600 * 24);
+
             if (dayDifference === 1) {
               currentStreak++;
             } else if (dayDifference > 1) {
-              currentStreak = 1; // Reset streak on gap
+              currentStreak = 0; // Reset streak on gap
             }
             previousDate = currentDate;
           });
@@ -78,9 +79,9 @@ export default function Dashboard() {
   const userId = session.user.id
 
   return (
-    <div className="flex justify-center min-h-screen text-white">
+    <div className="flex justify-center min-h-screen">
       <div className="max-w-screen-sm w-full"> {/* Wrapper for mobile-first approach */}
-      <p className=" text-white text-xl font-bold text-center py-4 w-full">
+      <p className="font-bold text-xl text-center py-4 w-full">
       Welcome, {session.user.name}!
     </p>
         {/* Progress Card */}
@@ -95,7 +96,7 @@ export default function Dashboard() {
         
         <Button
           onClick={() => signOut({ callbackUrl: '/' })}
-          className="m-6" // Center button, mobile-friendly width
+          className="mx-[26px]" // Center button, mobile-friendly width
           style={{ cursor: 'pointer' }}
         >
           Sign Out
