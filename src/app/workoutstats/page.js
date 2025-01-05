@@ -5,6 +5,7 @@ import { format } from "date-fns-tz"
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import DateRangePicker from "../components/DateRangePicker";
 
 
 export default function WorkoutStats() {
@@ -17,11 +18,50 @@ export default function WorkoutStats() {
   const [workoutName, setWorkoutName] = useState(""); // Separate state for workout name
   const [workoutDate, setWorkoutDate] = useState(new Date().toISOString().split("T")[0])
   const [exercises, setExercises] = useState([]);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [workouts, setWorkouts] = useState([]);
   const [currentExercise, setCurrentExercise] = useState({
     name: "",
     sets: 0,
     setsData: [],
 });
+
+ // Handler for start date change
+ const handleStartDateChange = (value) => {
+  setStartDate(value);
+};
+
+// Handler for end date change
+const handleEndDateChange = (value) => {
+  setEndDate(value);
+};
+
+// Handler for searching workouts within the date range
+const handleSearchWorkouts = async () => {
+  console.log("Search button clicked")
+  if (!startDate || !endDate) {
+    alert('Please select both start and end dates.');
+    return;
+  }
+
+  try {
+    // Send the date range to the backend
+    const response = await fetch(`/api/dateRange?startDate=${startDate}&endDate=${endDate}`);
+    const data = await response.json();
+
+    if (response.ok) {
+      const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date))
+      setWorkoutStats(sortedData);
+    } else {
+      console.error('Error fetching workouts:', data.message);
+      setWorkoutStats([]);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    setWorkoutStats([])
+  }
+};
 
 
 // Handle input changes for current exercise
@@ -210,6 +250,13 @@ const handleSaveWorkout = async () => {
   return (
     <div className="flex flex-col items-center px-4 py-8 bg-gray-900 text-white min-h-screen">
       <h1 className="text-4xl font-bold mb-6">Your Workouts</h1>
+      <DateRangePicker 
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={handleStartDateChange}
+        onEndDateChange={handleEndDateChange}
+        onSearch={() => handleSearchWorkouts()}
+      />
 
       <div className="w-full max-w-3xl space-y-4">
         {workoutStats && workoutStats.length > 0 ? (
@@ -281,6 +328,7 @@ const handleSaveWorkout = async () => {
       onClick={navigateHome}>
         Home
       </Button>
+
       <Dialog.Root
                 onOpenChange={(isOpen) => {
                     if (!isOpen) {
