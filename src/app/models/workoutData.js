@@ -1,24 +1,24 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const SetSchema = new mongoose.Schema({
-  reps: { type: Number, required: true },
-  weight: { type: Number, required: true },
+// Parent schema that defines common fields
+const workoutSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  workoutName: { type: String, required: true },
+  workoutDate: { type: Date, required: true },
+  workoutType: { type: String, required: true },  // 'Cardio' or 'Strength'
+  
+  // Conditional field based on workout type
+  exercises: {
+    type: [{ 
+      name: String,
+      sets: Array
+    }],
+    required: function() { return this.workoutType === 'Strength'; },  // Only required for Strength workouts
+    default: undefined  // Default to undefined for Cardio workouts
+  }
 });
 
-const ExerciseSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // Exercise name (e.g., "Incline Dumbbell Press")
-  sets: [SetSchema], // Array of sets for each exercise
-});
-
-const WorkoutSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  name: { type: String, required: true }, // Workout name (e.g., "Chest & Back")
-  date: { type: Date, required: true }, // Date of the workout
-  exercises: [ExerciseSchema], // Array of exercises
-},
-{ timestamps: true }
-);
-
-const WorkoutData = mongoose.models.WorkoutData || mongoose.model("WorkoutData", WorkoutSchema);
+// Parent model
+const WorkoutData = mongoose.models.WorkoutData || mongoose.model('WorkoutData', workoutSchema);
 
 export default WorkoutData;

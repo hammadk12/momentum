@@ -19,7 +19,7 @@ export async function GET(req) {
     }
 
     const workouts = await WorkoutData.find({
-      date: {
+      workoutDate: {
         $gte: new Date(startDate),
         $lte: new Date(endDate),
       },

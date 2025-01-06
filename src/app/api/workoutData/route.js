@@ -1,43 +1,51 @@
 import dbConnect from "../../lib/dbConnect";
-import WorkoutData from "../../models/workoutData";
+import StrengthWorkout from "@/app/models/strengthSchema";
+import WorkoutData from "@/app/models/workoutData";
 
 export async function POST(req) {
     await dbConnect();
     
     try {
-        const { userId, name, date, exercises } = await req.json(); // Parse the request body
+        const { userId, name, date, workoutType, exercises } = await req.json(); // Parse the request body
     
-        // Validate the required fields
-        if (!userId || !name || !date || !exercises) {
+        if (!userId || !name || !date || !workoutType || workoutType !== 'Strength') {
           return new Response(
-            JSON.stringify({ message: "All fields are required." }),
+            JSON.stringify({ message: "Invalid or missing fields for Strength workout." }),
             { status: 400 }
           );
         }
-    
-        // Create a new workout data entry
-        const workoutData = new WorkoutData({
-          userId,
-          name,
-          date,
-          exercises,
-        });
-    
-        // Save the workout data to the database
-        const savedWorkoutData = await workoutData.save();
-    
-        // Return the saved data as the response
-        return new Response(JSON.stringify(savedWorkoutData), { status: 200 });
-      } catch (error) {
-        return new Response(
-          JSON.stringify({ message: "Error saving workout data", error }),
-          { status: 500 }
-        );
-      }
+
+        // Validate strength-specific fields
+    if (!exercises || exercises.length === 0) {
+      return new Response(
+        JSON.stringify({ message: "Exercises field is required for Strength workouts." }),
+        { status: 400 }
+      );
     }
     
+         // Create a new strength workout
+    const strengthWorkout = new StrengthWorkout({
+      userId,
+      workoutName: name,
+      workoutDate: date,
+      workoutType,
+      exercises,
+    });
+    
+        // Save the strength workout to the database
+    const savedStrengthWorkout = await strengthWorkout.save();
+
+    return new Response(JSON.stringify(savedStrengthWorkout), { status: 200 });
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ message: "Error saving strength workout data", error }),
+      { status: 500 }
+    );
+  }
+}
+    
     // GET handler for fetching all workout data
-export async function GET(req) {
+export async function GET() {
   await dbConnect(); // Ensure DB is connected
 
   try {

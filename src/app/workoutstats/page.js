@@ -1,11 +1,12 @@
 "use client"
 import { useEffect, useState } from "react";
-import { Button, Dialog, Flex, TextField, Text, Card } from "@radix-ui/themes";
+import { Button, Dialog, Flex, TextField, Text, Card, Popover } from "@radix-ui/themes";
 import { format } from "date-fns-tz"
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import DateRangePicker from "../components/DateRangePicker";
+import CardioForm from "../components/CardioForm";
 
 
 export default function WorkoutStats() {
@@ -20,6 +21,9 @@ export default function WorkoutStats() {
   const [exercises, setExercises] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [cardioType, setCardioType] = useState('');
+  const [duration, setDuration] = useState('');
+  const [distance, setDistance] = useState('');
   const [currentExercise, setCurrentExercise] = useState({
     name: "",
     sets: 0,
@@ -132,59 +136,101 @@ const handleCancel = () => {
   setWorkoutDate(new Date().toISOString().split("T")[0]); 
 };
 
-const handleSaveWorkout = async () => {
-  const userId = session?.user?.id
+const handleSaveWorkout = async (type, workoutData) => {
+  const userId = session?.user?.id;
 
   if (!userId) {
     alert("You must be logged in to save a workout.");
     return;
   }
 
+
   try {
-      // Preparing exercises data for saving
-      const workoutData = exercises.map((exercise) => ({
-        name: exercise.name,
-        sets: exercise.setsData.map((set) => ({
-          reps: set.reps,
-          weight: set.weight,
-        })),
-      }));
-  
-      const response = await fetch("/api/workoutData", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    let route = "";
+    let payload = {};
+
+    console.log('Workout Data Received:', workoutData);
+
+    if (type === "cardio") {
+      // Cardio-specific payload
+      const { cardioType, duration, distance } = workoutData;
+      const workoutDate = workoutData.workoutDate ? new Date(workoutData.workoutDate) : new Date(); // Handle possible null or undefined date
+      const formattedDate1 = workoutDate.toISOString().split("T")[0]; // "2025-01-05"
+      
+
+      route = "/api/cardioData";
+      payload = {
+        userId,
+        name: "Cardio",
+        date: formattedDate1, // Assuming you have a `workoutDate` state
+        workoutType: "Cardio",
+        cardio: {
+          cardioType: cardioType,
+          duration: parseInt(duration),  // Ensure duration is a number
+          distance: parseFloat(distance),
         },
-        body: JSON.stringify({
-          userId, // Use the passed userId
-          name: workoutName,
-          date: workoutDate,
-          exercises: workoutData, // Send the exercises in the expected format
-        }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error("Error response:", errorData);
-        throw new Error("Failed to save workout. Please try again.");
-      }
-  
-      const data = await response.json();
-      console.log("Workout saved successfully:", data);
-  
-      // Reset the form
+      };
+    } else if (type === 'strength') {
+      const { workoutName, exercises } = workoutData;
+      const workoutDate = workoutData.workoutDate ? new Date(workoutData.workoutDate) : new Date(); // Handle possible null or undefined date
+      const formattedDate1 = workoutDate.toISOString().split("T")[0]; // "2025-01-05"
+      // Strength workout-specific payload
+      route = "/api/workoutData";
+      payload = {
+        userId,
+        name: workoutData.workoutName,
+        date: formattedDate1,
+        workoutType: "Strength",
+        exercises: exercises.map((exercise) => ({
+          name: exercise.name,
+          sets: exercise.setsData.map((set) => ({
+            reps: set.reps,
+            weight: set.weight,
+          })),
+        })),
+      };
+    } else {
+      throw new Error("Invalid workout type");
+    }
+
+    console.log('Payload:', payload);  // Log the payload just before sending it to check for correctness.
+
+
+    const response = await fetch(route, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Error response:", errorData);
+      throw new Error("Failed to save workout. Please try again.");
+    }
+
+    const data = await response.json();
+    console.log(`${type.charAt(0).toUpperCase() + type.slice(1)} workout saved successfully:`, data);
+
+    // Reset the appropriate form data
+    if (type === "cardio") {
+      setCardioType("");
+      setDuration("");
+      setDistance("");
+    } else if (type === "strength") {
       setExercises([]);
       setWorkoutName("");
-      setWorkoutDate(new Date().toISOString().split("T")[0])
-
-      window.location.reload()
-
-      alert("Workout saved successfully!");
-    } catch (error) {
-      console.error("Error saving workout:", error);
-      alert("Error saving workout. Please try again.");
     }
-  };
+    setWorkoutDate(new Date().toISOString().split("T")[0]);
+
+    window.location.reload();
+    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} workout saved successfully!`);
+  } catch (error) {
+    console.error(`Error saving ${type} workout:`, error);
+    alert(`Error saving ${type} workout. Please try again.`);
+  }
+};
 
   const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
@@ -210,9 +256,8 @@ const handleSaveWorkout = async () => {
           if (data.length > 0) {
             const dates = data.map((workout) => new Date(workout.date));
             const minDate = new Date(Math.min(...dates));
-            const maxDate = new Date(Math.max(...dates));
-            setDateRange(
-              `${minDate.toLocaleDateString()} - ${maxDate.toLocaleDateString()}`
+            const maxDate = new Date(Math.max(...dates))
+            setDateRange(`${minDate.toLocaleDateString()} - ${maxDate.toLocaleDateString()}`
             );
           } else {
             setDateRange("No workouts this week");
@@ -247,8 +292,8 @@ const handleSaveWorkout = async () => {
 
 
   return (
-    <div className="flex flex-col items-center px-4 py-8 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-4xl font-bold mb-6">Your Workouts</h1>
+    <div className="flex flex-col items-center px-4 py-8 text-white min-h-screen">
+      <h1 className="text-4xl font-bold mb-6 mt-10">Your Workouts</h1>
       <DateRangePicker 
         startDate={startDate}
         endDate={endDate}
@@ -260,11 +305,27 @@ const handleSaveWorkout = async () => {
       <div className="w-full max-w-3xl space-y-4">
         {workoutStats && workoutStats.length > 0 ? (
           workoutStats.map((workout) => {
+          
+            const workoutDate = workout.workoutDate;
 
-            const parsedDate = new Date(workout.date).toISOString().split("T")[0];
-            const utcDate = fromZonedTime(parsedDate, localTimeZone);
-            const localDate = toZonedTime(utcDate, localTimeZone);// Adjusting to the local timezone
-            const formattedDate = format(localDate, "MMM d, yyyy");
+            if (!workoutDate) {
+              console.error("Workout date is missing:", workout); // Log the whole object if the date is missing
+              return <p>No valid date available</p>;
+            }
+
+            // Proceed with date handling if workoutDate exists
+            const parsedDate = new Date(workoutDate);
+            if (isNaN(parsedDate)) {
+              console.error("Invalid date:", workoutDate);
+              return <p>No valid date available</p>; // Optionally return a placeholder message
+            }
+
+            const formattedDate = parsedDate.toISOString().split("T")[0]; // Format the date to YYYY-MM-DD
+            const utcDate = fromZonedTime(formattedDate, localTimeZone);
+            const localDate = toZonedTime(utcDate, localTimeZone); // Adjusting to the local timezone
+            const finalFormattedDate = format(localDate, "MMM d, yyyy"); // Format the date in a user-friendly format
+
+            
 
             return (
             <Card
@@ -273,60 +334,104 @@ const handleSaveWorkout = async () => {
             >
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">
-                  Workout on {formattedDate}
+                  Workout on {finalFormattedDate}
                 </h2>
               </div>
 
-              <p className="font-semibold">{workout.name}</p>
-              <p className="font-medium text-gray-300">
-                Exercises:{" "}
-                {workout.exercises.map((exercise) => exercise.name || "Unnamed Exercise").join(", ")}
-              </p>
+              <p className="font-semibold">{workout.workoutName}</p>
+
+              {/* Conditional rendering for strength workouts */}
+              {workout.exercises ? (
+                <p className="font-medium text-gray-300">
+                  Exercises:{" "}
+                  {workout.exercises.map((exercise) => exercise.name || "Unnamed Exercise").join(", ")}
+                </p>
+              ) : (
+                <p></p>
+              )}
+
               <Button className="mt-2"
                 onClick={() => toggleCard(workout._id)}
               >
                  {expandedCard === workout._id ? "Hide Details" : "View Details"}
               </Button>
+
               {expandedCard === workout._id && (
                 <div className="mt-4">
                   <h3 className="font-bold mb-1">
                     Full Workout Details:
                   </h3>
                   <ul className="list-disc list-inside space-y-1">
-                  {workout.exercises.map((exercise) => (
-                  <li key={exercise._id}>
-                    <span className="font-medium">
-                      {exercise.name || "Unnamed Exercise"}
-                    </span>
-                    {exercise.sets && exercise.sets.length > 0 ? (
-                          <ul className="list-inside pl-4 space-y-1 text-gray-300">
+                  {/* Render exercises only for strength workouts */}
+                  {workout.exercises && workout.exercises.length > 0 && (
+                    workout.exercises.map((exercise) => (
+                      <li key={exercise._id}>
+                        <span className="font-medium">{exercise.name || "Unnamed Exercise"}</span>
+                        {exercise.sets && exercise.sets.length > 0 ? (
+                          <ul className="list-inside leading-loose pl-4 text-gray-300">
                             {exercise.sets.map((set, index) => (
                               <li key={index}>
                                 {set.reps && `Reps: ${set.reps}`} 
                                 {set.weight && `, Weight: ${set.weight} lbs`}
                               </li>
                             ))}
-                        </ul>
-                    ) : (
-                      <span>No sets data available</span>
-                    )}
-                    </li>
-                  ))}
-                  </ul>
-                </div>
-              )}
-            </Card>
+                          </ul>
+                        ) : (
+                          <span>No sets data available</span>
+                        )}
+                      </li>
+                    ))
+                  )}
+
+                   {/* Display cardio-specific details */}
+                  {workout.cardio && (
+                    <div className="mt-4 text-gray-300">
+                      <ul className="list-inside pl-4 space-y-1">
+                        {workout.cardio.cardioType && (
+                          <li>Type: {workout.cardio.cardioType}</li>
+                        )}
+                        {workout.cardio.duration && (
+                          <li>Duration: {workout.cardio.duration} minutes</li>
+                        )}
+                        {workout.cardio.distance && (
+                          <li>Distance: {workout.cardio.distance} miles</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </ul>
+              </div>
+            )}
+          </Card>
             )
           })
         ) : (
-          <p>No workouts logged yet.</p>
+          <p>No workouts logged yet. Add your workouts using the button below</p>
         )}
       </div>
       <Button 
-      className="fixed bottom-8 right-8 p-4 hover:bg-blue-700 transition-colors"
+      className="absolute top-3 left-3 p-3 hover:bg-blue-700 transition-colors"
       onClick={navigateHome}>
         Home
       </Button>
+      
+      <Popover.Root>
+        <Popover.Trigger>
+          <Button className="fixed bottom-8 right-8">+</Button>
+        </Popover.Trigger>
+        <Popover.Content width="170px" height='150px'>
+        <Flex direction='column' gapY='10px'>
+      <CardioForm 
+        onSave={handleSaveWorkout}
+        workoutDate={workoutDate}
+        cardioType={cardioType}
+        setCardioType={setCardioType}
+        duration={duration}
+        setDuration={setDuration}
+        distance={distance}
+        setDistance={setDistance}
+        type='cardio'
+      />
 
       <Dialog.Root
                 onOpenChange={(isOpen) => {
@@ -336,7 +441,7 @@ const handleSaveWorkout = async () => {
                 }}
             >
                 <Dialog.Trigger>
-                    <Button className="fixed bottom-20 right-8 p-4 hover:bg-blue-700 transition-colors">+</Button>
+                    <Button className="p-4 hover:bg-blue-700 transition-colors">+ Add Workout</Button>
                 </Dialog.Trigger>
 
                 <Dialog.Content maxWidth="450px">
@@ -470,8 +575,12 @@ const handleSaveWorkout = async () => {
                             </Dialog.Close>
                             <Dialog.Close disabled={exercises.length === 0}>
                                 <Button
-                                    onClick={handleSaveWorkout}
-                                >
+                                    onClick={() => 
+                                      handleSaveWorkout("strength", { 
+                                          workoutName, 
+                                          workoutDate,
+                                          exercises 
+                                      })}>
                                     Save
                                 </Button>
 
@@ -480,6 +589,12 @@ const handleSaveWorkout = async () => {
                     </Flex>
                 </Dialog.Content>
             </Dialog.Root>
+            <Popover.Close>
+              <Button variant="soft">Close</Button>
+            </Popover.Close>
+            </Flex>
+            </Popover.Content>
+            </Popover.Root>
     </div>
   );
 }
