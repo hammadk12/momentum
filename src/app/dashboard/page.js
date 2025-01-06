@@ -36,7 +36,7 @@ export default function Dashboard() {
           let currentStreak = 0;
           let previousDate = new Date(sortedData[0].date);
           sortedData.forEach((workout) => {
-            const currentDate = new Date(workout.date);
+            const currentDate = new Date(workout.workoutDate);
             const dayDifference = (currentDate - previousDate) / (1000 * 3600 * 24);
 
             if (dayDifference === 1) {
