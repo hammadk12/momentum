@@ -25,11 +25,10 @@ export default function Home() {
 }
 
 return (
-  <div>
-    <h1>Welcome to Momentum!</h1>
+  <div className="flex flex-col justify-center h-screen text-center px-4">
+    <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome to Momentum!</h1>
     {!session ? (
       <div>
-        <p>Please sign in to continue.</p>
         <SigninButton />
       </div>
     ) : null}

@@ -6,7 +6,7 @@ import { Button } from '@radix-ui/themes';
 const SigninButton = () => {
 
   return (
-    <Button onClick={() => signIn()} size="5">
+    <Button onClick={() => signIn()} className='p-6 rounded'>
       Sign In
     </Button>
   );
