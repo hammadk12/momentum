@@ -1,4 +1,4 @@
-
+"use client"
 import { Button, Card} from '@radix-ui/themes';
 
 const WorkoutCard = ({ router }) => {

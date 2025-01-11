@@ -1,4 +1,4 @@
-
+"use client"
 import { Card } from "@radix-ui/themes"; // Assuming you're using Radix UI for the Card component
 
 const ProgressCard = ({ streak, totalWorkouts }) => {

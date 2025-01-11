@@ -1,3 +1,4 @@
+"use client"
 import { Button, Dialog, Flex, Text, TextField } from "@radix-ui/themes";
 import { useState, useEffect } from "react";
 
