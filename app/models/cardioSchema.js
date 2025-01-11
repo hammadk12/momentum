@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import WorkoutData from './workoutData';
+
 
 // Cardio-specific schema extending the parent
 const cardioSchema = new mongoose.Schema({
