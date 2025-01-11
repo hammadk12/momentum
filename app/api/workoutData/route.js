@@ -1,6 +1,6 @@
 import dbConnect from "../../lib/dbConnect";
-import StrengthWorkout from "@/app/models/strengthSchema";
-import WorkoutData from "@/app/models/workoutData";
+import StrengthWorkout from "../../models/strengthSchema";
+import WorkoutData from "../../models/workoutData";
 
 export async function POST(req) {
     await dbConnect();

@@ -6,7 +6,7 @@ import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import DateRangePicker from "../components/DateRangePicker";
-import CardioForm from "../components/CardioForm";
+import CardioForm from "../components/CardioForm"
 
 
 export default function WorkoutStats() {

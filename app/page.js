@@ -4,7 +4,7 @@ import "./globals.css";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SigninButton from "./components/SigninButton";
+import SigninButton from "./components/SigninButton"
 
 
 

@@ -3,7 +3,7 @@ import { Button } from "@radix-ui/themes";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import WorkoutCard from "../components/WorkoutCard";
+import WorkoutCard from "../components/WorkoutCard"
 import ProgressCard from "../components/ProgressCard";
 
 export default function Dashboard() {
