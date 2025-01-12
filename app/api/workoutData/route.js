@@ -1,48 +1,79 @@
+
+
 import dbConnect from "../../lib/dbConnect";
-import StrengthWorkout from "../../models/strengthSchema";
-import WorkoutData from "../../models/workoutData";
+import WorkoutData from "../../models/workoutData"
 
 export async function POST(req) {
-    await dbConnect();
-    
-    try {
-        const { userId, name, date, workoutType, exercises } = await req.json(); // Parse the request body
-    
-        if (!userId || !name || !date || !workoutType || workoutType !== 'Strength') {
-          return new Response(
-            JSON.stringify({ message: "Invalid or missing fields for Strength workout." }),
-            { status: 400 }
-          );
-        }
+  await dbConnect();
+  
+  try {
+    const { userId, workoutType, workoutName, workoutDate, cardio, exercises } = await req.json();
 
-        // Validate strength-specific fields
-    if (!exercises || exercises.length === 0) {
+    // Validate required fields
+    if (!userId || !workoutType || !workoutName || !workoutDate) {
       return new Response(
-        JSON.stringify({ message: "Exercises field is required for Strength workouts." }),
+        JSON.stringify({ message: "Missing required fields." }),
         { status: 400 }
       );
     }
-    
-         // Create a new strength workout
-    const strengthWorkout = new StrengthWorkout({
-      userId,
-      workoutName: name,
-      workoutDate: date,
-      workoutType,
-      exercises,
-    });
-    
-        // Save the strength workout to the database
-    const savedStrengthWorkout = await strengthWorkout.save();
 
-    return new Response(JSON.stringify(savedStrengthWorkout), { status: 200 });
+    let newWorkoutData = {};
+
+    if (workoutType === "Cardio") {
+      if (!cardio || !cardio.cardioType || !cardio.duration || !cardio.distance) {
+        return new Response(
+          JSON.stringify({ message: "Cardio data is incomplete." }),
+          { status: 400 }
+        );
+      }
+
+      // Cardio-specific data
+      newWorkoutData = {
+        userId,
+        workoutName,
+        workoutDate,
+        workoutType,
+        cardio,
+      };
+    } else if (workoutType === "Strength") {
+      if (!exercises || exercises.length === 0) {
+        return new Response(
+          JSON.stringify({ message: "Strength exercises are required." }),
+          { status: 400 }
+        );
+      }
+
+      // Strength-specific data
+      newWorkoutData = {
+        userId,
+        workoutName,
+        workoutDate,
+        workoutType,
+        exercises,
+      };
+    } else {
+      return new Response(
+        JSON.stringify({ message: "Invalid workout type." }),
+        { status: 400 }
+      );
+    }
+
+    // Create the new workout data
+    const newWorkout = new WorkoutData(newWorkoutData);
+
+    // Save to the database
+    const savedWorkout = await newWorkout.save();
+    const savedWorkoutObj = savedWorkout.toObject();
+
+    return new Response(JSON.stringify(savedWorkoutObj), { status: 200 });
   } catch (error) {
     return new Response(
-      JSON.stringify({ message: "Error saving strength workout data", error }),
+      JSON.stringify({ message: "Error saving workout data", error }),
       { status: 500 }
     );
   }
 }
+
     
     // GET handler for fetching all workout data
 export async function GET() {

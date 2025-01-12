@@ -32,7 +32,7 @@ export async function POST(req) {
     });
 
     // Save the cardio workout to the database
-    const savedCardioWorkout = await cardioWorkout.save();
+    const savedCardioWorkout = await workoutData.save();
 
     return new Response(JSON.stringify(savedCardioWorkout), { status: 200 });
   } catch (error) {
