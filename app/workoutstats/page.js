@@ -158,7 +158,7 @@ const handleSaveWorkout = async (type, workoutData) => {
       const formattedDate1 = workoutDate.toISOString().split("T")[0]; // "2025-01-05"
       
 
-      route = "/api/cardioData";
+      route = "/api/workoutData";
       payload = {
         userId,
         name: "Cardio",
