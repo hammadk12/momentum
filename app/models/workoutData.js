@@ -58,10 +58,11 @@ const workoutSchema = new mongoose.Schema(
   }
 );
 
+// Check if the models are already defined to avoid OverwriteModelError
+let WorkoutData = mongoose.models.WorkoutData || mongoose.model("WorkoutData", workoutSchema);
+
 // Discriminators for workout types
-const WorkoutData = mongoose.model("WorkoutData", workoutSchema);
+let CardioWorkout = mongoose.models.CardioWorkout || WorkoutData.discriminator("CardioWorkout", new mongoose.Schema({}));
+let StrengthWorkout = mongoose.models.StrengthWorkout || WorkoutData.discriminator("StrengthWorkout", new mongoose.Schema({}));
 
-const CardioWorkout = WorkoutData.discriminator("CardioWorkout", new mongoose.Schema({}));
-const StrengthWorkout = WorkoutData.discriminator("StrengthWorkout", new mongoose.Schema({}));
-
-export { WorkoutData, CardioWorkout, StrengthWorkout };
+export default { WorkoutData, CardioWorkout, StrengthWorkout };
